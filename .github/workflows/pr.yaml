@@ -11,4 +11,4 @@ jobs:
 
     steps:
       - name: Run llama.cpp
-        uses: psm14/llama-cpp-action@${{ github.sha }}
+        uses: ./
