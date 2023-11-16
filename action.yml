@@ -1,0 +1,40 @@
+name: llama-cpp-action
+description: Run llama.cpp in Github Actions workflows
+
+inputs:
+  prompt:
+    description: The initial prompt
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout llama.cpp
+      uses: actions/checkout@v4
+      with:
+        repository: 'ggerganov/llama.cpp'
+        # TODO: do this in a tempdir
+        #path: 'llama-cpp'
+
+    - uses: cachix/install-nix-action@v22
+      with:
+        nix_path: nixpkgs=channel:nixos-unstable
+    
+    - shell: bash
+      run: |
+        : build llama.cpp
+        nix build .
+    
+    # TODO: where is the best place to cache this?
+    - shell: bash
+      run: |
+        : download model
+        curl -OJL 'https://huggingface.co/TheBloke/OpenHermes-2.5-Mistral-7B-GGUF/resolve/main/openhermes-2.5-mistral-7b.Q4_K_M.gguf?download=true'
+    
+    - shell: bash
+      env:
+        PROMPT: ${{ inputs.prompt }}
+      run: |
+        : run llama.cpp
+        echo "<|im_start|>user\n${PROMPT}<|im_end|>\n<|im_start|>assistant" > prompt.txt
+        ./result/bin/llama -m "./openhermes-2.5-mistral-7b.Q4_K_M.gguf" -f prompt.txt
