@@ -10,4 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: .
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run llama.cpp
+        uses: ./
+        with:
+          prompt: Write me an essay about the man-made wonders of the world
