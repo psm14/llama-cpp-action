@@ -15,3 +15,5 @@ jobs:
 
       - name: Run llama.cpp
         uses: ./
+        with:
+          prompt: Write me an essay about the man-made wonders of the world
