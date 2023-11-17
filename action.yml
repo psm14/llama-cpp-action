@@ -13,7 +13,9 @@ runs:
       id: make-temp-dir
       run: |
         : make temp dir
-        temp_dir=$(mktemp -d)
+        #temp_dir=$(mktemp -d)
+        mkdir -p .llamacpp
+        temp_dir="$PWD/.llamacpp"
         echo "temp-dir=${temp_dir}" >> $GITHUB_OUTPUT
 
     - name: Checkout llama.cpp
