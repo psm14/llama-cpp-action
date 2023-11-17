@@ -9,29 +9,38 @@ inputs:
 runs:
   using: composite
   steps:
+    - shell: bash
+      id: make-temp-dir
+      run: |
+        : make temp dir
+        temp_dir=$(mktemp -d)
+        echo "temp-dir=${temp_dir}" >> $GITHUB_OUTPUT
+
     - name: Checkout llama.cpp
       uses: actions/checkout@v4
       with:
         repository: 'ggerganov/llama.cpp'
-        # TODO: do this in a tempdir
-        #path: 'llama-cpp'
+        path: ${{ steps.make-temp-dir.outputs.temp-dir }}
 
     - uses: cachix/install-nix-action@v22
       with:
         nix_path: nixpkgs=channel:nixos-unstable
     
     - shell: bash
+      working-directory: ${{ steps.make-temp-dir.outputs.temp-dir }}
       run: |
         : build llama.cpp
         nix build .
     
     # TODO: where is the best place to cache this?
     - shell: bash
+      working-directory: ${{ steps.make-temp-dir.outputs.temp-dir }}
       run: |
         : download model
         curl -OJL 'https://huggingface.co/TheBloke/OpenHermes-2.5-Mistral-7B-GGUF/resolve/main/openhermes-2.5-mistral-7b.Q4_K_M.gguf?download=true'
     
     - shell: bash
+      working-directory: ${{ steps.make-temp-dir.outputs.temp-dir }}
       env:
         PROMPT: ${{ inputs.prompt }}
       run: |

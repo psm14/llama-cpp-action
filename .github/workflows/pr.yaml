@@ -10,5 +10,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Run llama.cpp
-        uses: psm14/llama-cpp-action@${{ github.head_ref }}
+        uses: ./
