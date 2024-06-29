@@ -71,4 +71,4 @@ runs:
       run: |
         : run llama.cpp
         ./build/bin/llama-cli --model ./model.gguf --prompt "$PROMPT" > response.txt
-        { echo "response<<EOF"; cat response.txt; echo "EOF" } >> "$GITHUB_OUTPUT"
+        { echo "response<<EOF"; cat response.txt; echo "EOF"; } >> "$GITHUB_OUTPUT"
