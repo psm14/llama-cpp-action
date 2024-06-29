@@ -70,5 +70,5 @@ runs:
         PROMPT: ${{ inputs.prompt }}
       run: |
         : run llama.cpp
-        ./result/bin/llama --model ./model.gguf --prompt "$PROMPT" > response.txt
+        ./build/bin/llama-cli --model ./model.gguf --prompt "$PROMPT" > response.txt
         { echo "response<<EOF"; cat response.txt; echo "EOF" } >> "$GITHUB_OUTPUT"
