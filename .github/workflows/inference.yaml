@@ -1,4 +1,4 @@
-name: Pull Request Workflow
+name: Run Inference
 
 on:
   workflow_dispatch:
@@ -18,7 +18,7 @@ jobs:
 
       - name: Inference
         id: inference
-        uses: .
+        uses: ./
         with:
           prompt: ${{ github.event.inputs.prompt }}
 
