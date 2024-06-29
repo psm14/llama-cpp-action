@@ -71,4 +71,8 @@ runs:
       run: |
         : run llama.cpp
         ./build/bin/llama-cli --model ./model.gguf --prompt "$PROMPT" > response.txt
-        { echo "response<<EOF"; cat response.txt; echo "EOF"; } >> "$GITHUB_OUTPUT"
+        echo "response<<EOF" >> "$GITHUB_OUTPUT"
+        cat response.txt >> "$GITHUB_OUTPUT"
+        # Echo newline if one is missing at the end of response.txt
+        [ -n "$(tail -c1 response.txt)" ] && echo >> "$GITHUB_OUTPUT""
+        echo "EOF" >> "$GITHUB_OUTPUT"
