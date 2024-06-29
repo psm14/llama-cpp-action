@@ -5,36 +5,70 @@ inputs:
   prompt:
     description: The initial prompt
     required: true
+  llama-cpp-url:
+    description: URL of llama.cpp release
+    required: false
+    default: https://github.com/ggerganov/llama.cpp/releases/download/b3265/llama-b3265-bin-ubuntu-x64.zip
+  model-url:
+    description: URL of the model to use
+    required: false
+    default: https://huggingface.co/lmstudio-community/Meta-Llama-3-8B-Instruct-BPE-fix-GGUF/resolve/main/Meta-Llama-3-8B-Instruct-Q4_K_M.gguf
+
+outputs:
+  response:
+    description: "The model's response"
+    value: ${{ steps.inference.outputs.response }}
 
 runs:
   using: composite
   steps:
-    - name: Checkout llama.cpp
-      uses: actions/checkout@v4
-      with:
-        repository: 'ggerganov/llama.cpp'
-        # TODO: do this in a tempdir
-        #path: 'llama-cpp'
-
-    - uses: cachix/install-nix-action@v22
-      with:
-        nix_path: nixpkgs=channel:nixos-unstable
-    
     - shell: bash
+      env:
+        LLAMA_CPP_URL: ${{ inputs.llama-cpp-url }}
+        MODEL_URL: ${{ inputs.model-url }}
       run: |
-        : build llama.cpp
-        nix build .
-    
-    # TODO: where is the best place to cache this?
+        : write urls to files
+        echo "$LLAMA_CPP_URL" > llama-cpp-url.txt
+        echo "$MODEL_URL" > model-url.txt
+
+    - name: Cache llama.cpp
+      id: cache-llama-cpp
+      uses: actions/cache@v4
+      with:
+        key: llama-cpp-${{ hashFiles('llama-cpp-url.txt') }}
+        path: |
+          build
+
     - shell: bash
+      if: steps.cache-llama-cpp.outputs.cache-hit != 'true'
+      env:
+        LLAMA_CPP_URL: ${{ inputs.llama-cpp-url }}
+      run: |
+        : download llama.cpp
+        curl -L -o llama.zip "$LLAMA_CPP_URL"
+        unzip llama.zip
+
+    - name: Cache model
+      id: cache-model
+      uses: actions/cache@v4
+      with:
+        key: model-${{ hashFiles('model-utl.txt') }}
+        path: |
+          model.gguf
+
+    - shell: bash
+      if: steps.cache-model.outputs.cache-hit != 'true'
+      env:
+        MODEL_URL: ${{ inputs.model-url }}
       run: |
         : download model
-        curl -OJL 'https://huggingface.co/TheBloke/OpenHermes-2.5-Mistral-7B-GGUF/resolve/main/openhermes-2.5-mistral-7b.Q4_K_M.gguf?download=true'
-    
-    - shell: bash
+        curl -L -o model.gguf "$MODEL_URL"
+
+    - id: inference
+      shell: bash
       env:
         PROMPT: ${{ inputs.prompt }}
       run: |
         : run llama.cpp
-        echo "<|im_start|>user\n${PROMPT}<|im_end|>\n<|im_start|>assistant" > prompt.txt
-        ./result/bin/llama -m "./openhermes-2.5-mistral-7b.Q4_K_M.gguf" -f prompt.txt
+        ./result/bin/llama --model ./model.gguf --prompt "$PROMPT" > response.txt
+        { echo "response<<EOF"; cat response.txt; echo "EOF" } >> "$GITHUB_OUTPUT"

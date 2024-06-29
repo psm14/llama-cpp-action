@@ -1,0 +1,27 @@
+name: Pull Request Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: Prompt
+        type: string
+        required: true
+
+jobs:
+  inference:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Inference
+        id: inference
+        uses: .
+        with:
+          prompt: ${{ github.event.inputs.prompt }}
+
+      - shell: bash
+        run: |
+          : print response
